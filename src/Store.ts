@@ -1,10 +1,14 @@
 import { writable } from "svelte/store";
-import { connect, Connection, TableMetadata } from "@tableland/sdk";
+import { connect, Connection, CreateTableReceipt, ReadQueryResult } from "@tableland/sdk";
 import { redirect } from "svelte-pathfinder";
 
 export type Store = {
   isConnected: boolean
   data: any[]
+}
+
+type QueryResponse = {
+  data: ReadQueryResult
 }
 
 
@@ -21,9 +25,9 @@ export function createStore() {
       update(store => ({ ...store, isConnected: true}))
     },
     async fetch(tid: string) {
-      const { data } = await _api.query(`select * from ${tid};`) as any
-      console.log(data)
-      set({ data: data.rows, isConnected: true })
+      const { data: { rows, columns} } = await _api.query(`select * from ${tid};`) as unknown as QueryResponse
+      console.log(tid, rows, columns)
+      set({ data: rows, isConnected: true })
     },
     async create() {
       const { name } = await _api.create(`create table svelte_todo_demo (
